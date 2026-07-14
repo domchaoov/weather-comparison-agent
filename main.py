@@ -1,7 +1,11 @@
 import argparse
 import sys
 
+from overmind import init
+
 from weather_agent.agent import DEFAULT_MODEL, run
+
+init(service_name="weather-comparison-agent")
 
 
 def main() -> None:

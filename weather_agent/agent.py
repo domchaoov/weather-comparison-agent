@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from ollama import chat
+from overmind import entry_point
 
 from .tools import TOOL_IMPLEMENTATIONS, TOOL_SCHEMAS
 
@@ -30,6 +31,7 @@ def _call_tool(name: str, arguments: dict) -> dict:
     return implementation(**arguments)
 
 
+@entry_point("Weather Comparison Agent")
 def run(user_message: str, model: str = DEFAULT_MODEL, verbose: bool = True) -> str:
     """Run the agent loop for a single user request and return the final answer."""
     messages = [
