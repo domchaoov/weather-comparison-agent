@@ -10,26 +10,33 @@ load_dotenv()
 
 from overmind import init
 
-from weather_agent.agent import DEFAULT_MODEL, run
+from weather_agent.agent import run
+from weather_agent.providers import DEFAULT_PROVIDER, PROVIDERS
 
 init(service_name="weather-comparison-agent")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Compare the weather between two places using a local Ollama model.")
+    parser = argparse.ArgumentParser(description="Compare the weather between two places using Ollama or OpenRouter.")
     parser.add_argument(
         "question",
         nargs="*",
         help="e.g. 'What's the difference in weather between London and Tokyo?'",
     )
-    parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Ollama model to use (default: {DEFAULT_MODEL})")
+    parser.add_argument(
+        "--provider",
+        choices=sorted(PROVIDERS),
+        default=DEFAULT_PROVIDER,
+        help=f"Chat backend to use (default: {DEFAULT_PROVIDER})",
+    )
+    parser.add_argument("--model", default=None, help="Model to use (default depends on --provider)")
     parser.add_argument("--quiet", action="store_true", help="Hide tool-call logging.")
     args = parser.parse_args()
 
     question = " ".join(args.question) if args.question else "What's the difference in weather between London and Tokyo?"
 
     print(f"Q: {question}\n")
-    answer = run(question, model=args.model, verbose=not args.quiet)
+    answer = run(question, model=args.model, provider=args.provider, verbose=not args.quiet)
     print(f"\nA: {answer}")
 
 

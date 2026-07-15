@@ -1,15 +1,13 @@
-"""A small tool-calling agent that talks to a local Ollama model."""
+"""A small tool-calling agent that talks to a local Ollama model or OpenRouter."""
 
 from __future__ import annotations
 
-import json
-
-from ollama import chat
 from overmind import entry_point
 
+from .providers import DEFAULT_PROVIDER, PROVIDERS
 from .tools import TOOL_IMPLEMENTATIONS, TOOL_SCHEMAS
 
-DEFAULT_MODEL = "gemma4:latest"
+DEFAULT_MODEL = PROVIDERS[DEFAULT_PROVIDER].default_model
 
 SYSTEM_PROMPT = (
     "You are a weather comparison assistant. When asked to compare the weather "
@@ -32,42 +30,42 @@ def _call_tool(name: str, arguments: dict) -> dict:
 
 
 @entry_point("Weather Comparison Agent")
-def run(user_message: str, model: str = DEFAULT_MODEL, verbose: bool = True) -> str:
+def run(
+    user_message: str,
+    model: str | None = None,
+    provider: str = DEFAULT_PROVIDER,
+    verbose: bool = True,
+) -> str:
     """Run the agent loop for a single user request and return the final answer."""
+    try:
+        chat_provider = PROVIDERS[provider]
+    except KeyError:
+        raise ValueError(f"Unknown provider {provider!r}. Choose from: {', '.join(PROVIDERS)}") from None
+
+    model = model or chat_provider.default_model
+
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_message},
     ]
 
     for _ in range(MAX_TOOL_ROUNDS):
-        response = chat(model=model, messages=messages, tools=TOOL_SCHEMAS)
-        message = response["message"]
+        message = chat_provider.chat(model=model, messages=messages, tools=TOOL_SCHEMAS)
         messages.append(message)
 
-        tool_calls = message.get("tool_calls")
+        tool_calls = chat_provider.extract_tool_calls(message)
         if not tool_calls:
-            return message.get("content", "")
+            return message.get("content") or ""
 
         for tool_call in tool_calls:
-            fn = tool_call["function"]
-            name = fn["name"]
-            arguments = fn["arguments"]
-            if isinstance(arguments, str):
-                arguments = json.loads(arguments)
-
             if verbose:
-                print(f"  -> calling tool: {name}({arguments})")
+                print(f"  -> calling tool: {tool_call.name}({tool_call.arguments})")
 
-            result = _call_tool(name, arguments)
+            result = _call_tool(tool_call.name, tool_call.arguments)
 
             if verbose:
                 print(f"  <- tool result: {result}")
 
-            messages.append(
-                {
-                    "role": "tool",
-                    "content": json.dumps(result),
-                }
-            )
+            messages.append(chat_provider.build_tool_message(tool_call, result))
 
     return "Sorry, I couldn't finish comparing the weather within the tool-call budget."

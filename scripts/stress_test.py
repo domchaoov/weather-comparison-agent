@@ -39,7 +39,8 @@ from overmind import init
 
 init(service_name="weather-comparison-agent-stress-test")
 
-from weather_agent.agent import DEFAULT_MODEL, run  # noqa: E402
+from weather_agent.agent import run  # noqa: E402
+from weather_agent.providers import DEFAULT_PROVIDER, PROVIDERS  # noqa: E402
 
 
 Check = Callable[[str, str], "str | None"]
@@ -121,14 +122,14 @@ class Result:
     error: str | None = None
 
 
-def run_case(case: Case, model: str, timeout: float) -> Result:
+def run_case(case: Case, model: str, provider: str, timeout: float) -> Result:
     buf = io.StringIO()
     holder: dict[str, str] = {}
 
     def target() -> None:
         try:
             with contextlib.redirect_stdout(buf):
-                holder["answer"] = run(case.prompt, model=model, verbose=True)
+                holder["answer"] = run(case.prompt, model=model, provider=provider, verbose=True)
         except Exception as exc:  # noqa: BLE001 - deliberately broad, we're cataloguing failures
             holder["error"] = f"{type(exc).__name__}: {exc}"
 
@@ -153,24 +154,27 @@ def run_case(case: Case, model: str, timeout: float) -> Result:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Ollama model to test (default: {DEFAULT_MODEL})")
+    parser.add_argument("--provider", choices=sorted(PROVIDERS), default=DEFAULT_PROVIDER, help=f"Chat backend to test (default: {DEFAULT_PROVIDER})")
+    parser.add_argument("--model", default=None, help="Model to test (default depends on --provider)")
     parser.add_argument("--timeout", type=float, default=60.0, help="Per-case timeout in seconds (default: 60)")
     parser.add_argument("--category", action="append", help="Only run this category (repeatable): happy, edge, out_of_scope, adversarial")
     parser.add_argument("--output", help="Write a full JSON report to this path")
     parser.add_argument("--quiet", action="store_true", help="Only print the summary table, not each answer")
     args = parser.parse_args()
 
+    model = args.model or PROVIDERS[args.provider].default_model
+
     cases = CASES if not args.category else [c for c in CASES if c.category in args.category]
     if not cases:
         print("No cases matched the given --category filter(s).", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Running {len(cases)} cases against model={args.model!r} (timeout={args.timeout}s each)\n")
+    print(f"Running {len(cases)} cases against provider={args.provider!r} model={model!r} (timeout={args.timeout}s each)\n")
 
     results: list[Result] = []
     for i, case in enumerate(cases, 1):
         print(f"[{i}/{len(cases)}] {case.category:12s} {case.name:32s} ", end="", flush=True)
-        result = run_case(case, model=args.model, timeout=args.timeout)
+        result = run_case(case, model=model, provider=args.provider, timeout=args.timeout)
         results.append(result)
         print(f"{result.status} ({result.duration_s:.1f}s)")
         if not args.quiet:

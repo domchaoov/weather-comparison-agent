@@ -1,7 +1,8 @@
 # Weather Comparison Agent
 
-A small demo AI agent that compares the weather between two places. It calls a
-local [Ollama](https://ollama.com) model, which uses tool calling to:
+A small demo AI agent that compares the weather between two places. It calls
+a model via [Ollama](https://ollama.com) (local) or [OpenRouter](https://openrouter.ai)
+(hosted), which uses tool calling to:
 
 1. Look up the weather for each place (`get_weather`) — backed by a hard-coded
    dataset in [weather_agent/tools.py](weather_agent/tools.py).
@@ -10,12 +11,18 @@ local [Ollama](https://ollama.com) model, which uses tool calling to:
 
 ## Setup
 
-Requires [uv](https://docs.astral.sh/uv/) and a running local Ollama instance
-with a tool-calling-capable model pulled (e.g. `ollama pull llama3.2`).
+Requires [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync
 ```
+
+Pick a backend:
+
+- **Ollama (default)** — a running local Ollama instance with a
+  tool-calling-capable model pulled (e.g. `ollama pull llama3.2`).
+- **OpenRouter** — set `OPENROUTER_API_KEY` in `.env` (get a key at
+  [openrouter.ai/keys](https://openrouter.ai/keys)).
 
 ## Usage
 
@@ -29,9 +36,17 @@ Or run with the built-in default question:
 uv run main.py
 ```
 
+Use OpenRouter instead of local Ollama:
+
+```bash
+uv run main.py --provider openrouter --model openai/gpt-4o-mini "Compare London and Tokyo"
+```
+
 Options:
 
-- `--model <name>` — Ollama model to use (default: `gemma4:latest`; small
+- `--provider <ollama|openrouter>` — chat backend to use (default: `ollama`).
+- `--model <name>` — model to use (default depends on `--provider`:
+  `gemma4:latest` for Ollama, `openai/gpt-4o-mini` for OpenRouter; small
   models like `llama3.2:1b` are often too weak to reliably chain multiple
   tool calls).
 - `--quiet` — suppress the tool-call logging and just print the final answer.

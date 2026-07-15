@@ -1819,6 +1819,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "ollama" },
+    { name = "openai" },
     { name = "overmind" },
     { name = "python-dotenv" },
 ]
@@ -1826,6 +1827,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "ollama", specifier = ">=0.6.2" },
+    { name = "openai", specifier = ">=2.45.0" },
     { name = "overmind", specifier = ">=0.1.54" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
 ]
