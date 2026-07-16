@@ -29,15 +29,9 @@ from typing import Callable
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-# Same load-then-import ordering main.py uses: overmind.tracing reads
-# OVERMIND_API_URL at import time, so .env must load first.
 from dotenv import load_dotenv
 
 load_dotenv()
-
-from overmind import init
-
-init(service_name="weather-comparison-agent-stress-test")
 
 from weather_agent.agent import run  # noqa: E402
 from weather_agent.providers import DEFAULT_PROVIDER, PROVIDERS  # noqa: E402
