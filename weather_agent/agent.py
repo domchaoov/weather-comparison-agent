@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from overmind import entry_point
-
 from .providers import DEFAULT_PROVIDER, PROVIDERS
 from .tools import TOOL_IMPLEMENTATIONS, TOOL_SCHEMAS
 
@@ -29,7 +27,6 @@ def _call_tool(name: str, arguments: dict) -> dict:
     return implementation(**arguments)
 
 
-@entry_point("Weather Comparison Agent")
 def run(
     user_message: str,
     model: str | None = None,

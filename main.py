@@ -3,17 +3,10 @@ import sys
 
 from dotenv import load_dotenv
 
-# overmind.tracing reads OVERMIND_API_URL at import time (module-level default),
-# so .env must be loaded before overmind is imported or it silently falls back
-# to the production endpoint.
 load_dotenv()
-
-from overmind import init
 
 from weather_agent.agent import run
 from weather_agent.providers import DEFAULT_PROVIDER, PROVIDERS
-
-init(service_name="weather-comparison-agent")
 
 
 def main() -> None:
