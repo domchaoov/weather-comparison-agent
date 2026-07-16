@@ -7,7 +7,7 @@ load_dotenv()
 
 from overmind import init
 
-init(service_name="Weather Comparison Agent")
+init(service_name="Weather Comparison Agent", providers=[])
 
 from weather_agent.agent import run
 from weather_agent.providers import DEFAULT_PROVIDER, PROVIDERS
