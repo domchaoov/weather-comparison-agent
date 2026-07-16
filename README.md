@@ -1,8 +1,8 @@
 # Weather Comparison Agent
 
 A small demo AI agent that compares the weather between two places. It calls
-a model via [Ollama](https://ollama.com) (local) or [OpenRouter](https://openrouter.ai)
-(hosted), which uses tool calling to:
+a model via the [OpenAI](https://platform.openai.com) or
+[OpenRouter](https://openrouter.ai) API, which uses tool calling to:
 
 1. Look up the weather for each place (`get_weather`) — backed by a hard-coded
    dataset in [weather_agent/tools.py](weather_agent/tools.py).
@@ -19,8 +19,8 @@ uv sync
 
 Pick a backend:
 
-- **Ollama (default)** — a running local Ollama instance with a
-  tool-calling-capable model pulled (e.g. `ollama pull llama3.2`).
+- **OpenAI (default)** — set `OPENAI_API_KEY` in `.env` (get a key at
+  [platform.openai.com/api-keys](https://platform.openai.com/api-keys)).
 - **OpenRouter** — set `OPENROUTER_API_KEY` in `.env` (get a key at
   [openrouter.ai/keys](https://openrouter.ai/keys)).
 
@@ -36,7 +36,7 @@ Or run with the built-in default question:
 uv run main.py
 ```
 
-Use OpenRouter instead of local Ollama:
+Use OpenRouter instead of OpenAI:
 
 ```bash
 uv run main.py --provider openrouter --model openai/gpt-4o-mini "Compare London and Tokyo"
@@ -44,11 +44,9 @@ uv run main.py --provider openrouter --model openai/gpt-4o-mini "Compare London 
 
 Options:
 
-- `--provider <ollama|openrouter>` — chat backend to use (default: `ollama`).
+- `--provider <openai|openrouter>` — chat backend to use (default: `openai`).
 - `--model <name>` — model to use (default depends on `--provider`:
-  `gemma4:latest` for Ollama, `openai/gpt-4o-mini` for OpenRouter; small
-  models like `llama3.2:1b` are often too weak to reliably chain multiple
-  tool calls).
+  `gpt-4o-mini` for OpenAI, `openai/gpt-4o-mini` for OpenRouter).
 - `--quiet` — suppress the tool-call logging and just print the final answer.
 
 Known locations: London, New York, Tokyo, Sydney, Cairo, Moscow, Nairobi,

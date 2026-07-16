@@ -42,7 +42,7 @@ def calculate_temperature_difference(temperature_a: float, temperature_b: float)
     }
 
 
-# Tool schemas in the OpenAI/Ollama function-calling format.
+# Tool schemas in the OpenAI function-calling format.
 TOOL_SCHEMAS = [
     {
         "type": "function",

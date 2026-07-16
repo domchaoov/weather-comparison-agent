@@ -10,7 +10,7 @@ from weather_agent.providers import DEFAULT_PROVIDER, PROVIDERS
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Compare the weather between two places using Ollama or OpenRouter.")
+    parser = argparse.ArgumentParser(description="Compare the weather between two places using OpenAI or OpenRouter.")
     parser.add_argument(
         "question",
         nargs="*",
@@ -36,6 +36,6 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception as exc:  # surfaced to the user, e.g. Ollama not running
+    except Exception as exc:  # surfaced to the user, e.g. missing API key
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
