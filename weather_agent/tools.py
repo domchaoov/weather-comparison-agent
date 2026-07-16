@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from overmind import tool
+
 # Fake weather "database" - deliberately hard-coded for this demo agent.
 WEATHER_DATA: dict[str, dict[str, float | str]] = {
     "london": {"description": "Overcast with light drizzle", "temperature_c": 14.0},
@@ -15,6 +17,7 @@ WEATHER_DATA: dict[str, dict[str, float | str]] = {
 }
 
 
+@tool()
 def get_weather(location: str) -> dict[str, str | float]:
     """Look up the current weather for a hard-coded set of locations."""
     key = location.strip().lower()
@@ -32,6 +35,7 @@ def get_weather(location: str) -> dict[str, str | float]:
     }
 
 
+@tool()
 def calculate_temperature_difference(temperature_a: float, temperature_b: float) -> dict[str, float | str]:
     """Calculate the absolute difference between two temperatures in Celsius."""
     difference = round(abs(temperature_a - temperature_b), 2)

@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import overmind
+
+overmind.init(service_name="weather-comparison-agent", providers=["openai"])
+
 from weather_agent.agent import run
 from weather_agent.providers import DEFAULT_PROVIDER, PROVIDERS
 
