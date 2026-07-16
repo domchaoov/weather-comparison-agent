@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "openai>=2.45.0",
+    "overmind>=0.1.53",
     "python-dotenv>=1.2.2",
 ]
