@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+from overmind import entry_point, init
+
+init(
+    agent_name="Weather Comparison Assistant",
+    service_name="weather-comparison-agent",
+    providers=["openai"],
+)
+
 from .providers import DEFAULT_PROVIDER, PROVIDERS
 from .tools import TOOL_IMPLEMENTATIONS, TOOL_SCHEMAS
 
@@ -27,6 +35,7 @@ def _call_tool(name: str, arguments: dict) -> dict:
     return implementation(**arguments)
 
 
+@entry_point("Weather Comparison Assistant")
 def run(
     user_message: str,
     model: str | None = None,
