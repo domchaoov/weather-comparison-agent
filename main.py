@@ -1,9 +1,10 @@
 import argparse
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 from weather_agent.agent import run
 from weather_agent.providers import DEFAULT_PROVIDER, PROVIDERS
