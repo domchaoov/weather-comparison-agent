@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from overmind import entry_point, init
+from overmind import entry_point, init, set_conversation_id
 
 init(
     agent_name="Weather Comparison Assistant",
@@ -41,8 +41,16 @@ def run(
     model: str | None = None,
     provider: str = DEFAULT_PROVIDER,
     verbose: bool = True,
+    conversation_id: str | None = None,
+    history: list[dict] | None = None,
 ) -> str:
-    """Run the agent loop for a single user request and return the final answer."""
+    """Run one turn of the agent loop and return the final answer.
+
+    Pass `history` (the same list on every call) to continue a multi-turn
+    conversation - it's extended in place with this turn's messages so the
+    agent can resolve follow-up references. Pass `conversation_id` to tag
+    this turn's spans so Overmind groups separate turns into one session.
+    """
     try:
         chat_provider = PROVIDERS[provider]
     except KeyError:
@@ -50,10 +58,13 @@ def run(
 
     model = model or chat_provider.default_model
 
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_message},
-    ]
+    if conversation_id:
+        set_conversation_id(conversation_id)
+
+    messages = history if history is not None else []
+    if not messages:
+        messages.append({"role": "system", "content": SYSTEM_PROMPT})
+    messages.append({"role": "user", "content": user_message})
 
     for _ in range(MAX_TOOL_ROUNDS):
         message = chat_provider.chat(model=model, messages=messages, tools=TOOL_SCHEMAS)

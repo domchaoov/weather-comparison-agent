@@ -53,3 +53,36 @@ Options:
 
 Known locations: London, New York, Tokyo, Sydney, Cairo, Moscow, Nairobi,
 Reykjavik.
+
+## Stress testing
+
+```bash
+uv run scripts/stress_test.py
+```
+
+Fires a large batch of single-turn prompts (happy path, edge cases,
+out-of-scope, and adversarial/prompt-injection attempts) and reports how the
+agent handles each one — see [scripts/stress_test.py](scripts/stress_test.py)
+for the full case list and options (`--provider`, `--model`, `--category`,
+`--output`).
+
+```bash
+uv run scripts/multi_turn_stress_test.py
+```
+
+A smaller script that runs a few multi-turn conversations — each with 2 or
+more distinct weather comparison questions, including follow-ups that refer
+back to an earlier turn — against the agent. See
+[scripts/multi_turn_stress_test.py](scripts/multi_turn_stress_test.py).
+
+## Tracing
+
+The agent is instrumented with [Overmind](https://overmindlab.ai) via
+`overmind.init()` and `@entry_point` in
+[weather_agent/agent.py](weather_agent/agent.py); set `OVERMIND_API_KEY` in
+`.env` to export traces. `run()` accepts an optional `conversation_id` (and a
+`history` list to thread message context across calls) — passing the same
+`conversation_id` on multiple `run()` calls tags their spans so Overmind
+groups those turns into a single session in the platform, instead of showing
+them as unrelated one-off traces. `scripts/multi_turn_stress_test.py`
+demonstrates this by generating one `conversation_id` per conversation.
