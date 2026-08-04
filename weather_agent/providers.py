@@ -1,11 +1,9 @@
-"""Chat backends the agent can talk to: local Ollama or OpenRouter's hosted API.
+"""Chat backends the agent can talk to: Overmind inference or OpenRouter's hosted API.
 
-Both speak OpenAI-style tool schemas (see tools.TOOL_SCHEMAS), but the two
-clients disagree on how tool calls and tool results are shaped on the wire -
-Ollama is happy to echo its own dicts back untouched, while OpenAI-compatible
-APIs require tool_call_id to thread a result back to its call and want
-arguments JSON-encoded. Each Provider below owns that formatting so
-agent.run()'s loop can stay backend-agnostic.
+Both speak OpenAI-style tool schemas (see tools.TOOL_SCHEMAS) and use the
+OpenAI-compatible wire format for tool calls and tool results (tool_call_id
+to thread a result back to its call, arguments JSON-encoded). Each Provider
+below owns that formatting so agent.run()'s loop can stay backend-agnostic.
 """
 
 from __future__ import annotations
@@ -43,21 +41,52 @@ class Provider(Protocol):
 
 
 class OllamaProvider:
-    """Talks to a local Ollama server."""
+    """Talks to Overmind's OpenAI-compatible inference API. Requires OVERMIND_API_KEY."""
 
-    default_model = "gemma4:latest"
+    default_model = "ft-c49d183c-qwen3-4b"
+
+    def __init__(self) -> None:
+        self._client = None
+
+    def _get_client(self):
+        if self._client is None:
+            api_key = os.environ.get("OVERMIND_API_KEY")
+            if not api_key:
+                raise RuntimeError(
+                    "OVERMIND_API_KEY is not set. Add it to .env or your environment "
+                    "to use the default provider. Get a key at https://overmindlab.ai"
+                )
+            from openai import OpenAI
+
+            self._client = OpenAI(
+                base_url="https://api.overmindlab.ai/api/v1",
+                api_key=api_key,
+            )
+        return self._client
 
     def chat(self, model: str, messages: list[dict], tools: list[dict]) -> dict:
-        from ollama import chat
-
-        response = chat(model=model, messages=messages, tools=tools)
-        return response["message"]
+        client = self._get_client()
+        response = client.chat.completions.create(model=model, messages=messages, tools=tools)
+        message = response.choices[0].message
+        tool_calls = [
+            {
+                "id": call.id,
+                "type": "function",
+                "function": {"name": call.function.name, "arguments": call.function.arguments},
+            }
+            for call in (message.tool_calls or [])
+        ]
+        return {
+            "role": "assistant",
+            "content": message.content,
+            "tool_calls": tool_calls or None,
+        }
 
     def extract_tool_calls(self, message: dict) -> list[ToolCall]:
         return _parse_tool_calls(message.get("tool_calls"))
 
     def build_tool_message(self, tool_call: ToolCall, result: dict) -> dict:
-        return {"role": "tool", "content": json.dumps(result)}
+        return {"role": "tool", "tool_call_id": tool_call.id, "content": json.dumps(result)}
 
 
 class OpenRouterProvider:

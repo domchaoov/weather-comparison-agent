@@ -1,4 +1,4 @@
-"""A small tool-calling agent that talks to a local Ollama model or OpenRouter."""
+"""A small tool-calling agent that talks to Overmind inference or OpenRouter."""
 
 from __future__ import annotations
 
